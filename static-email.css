@@ -1,4 +1,4 @@
 @import "https://use.typekit.net/kow0zzf.css";
-@font-face{font-family:Circular;src:url(https://assets.misfits.co/circular-book.woff);font-style:normal;font-weight:200;font-display: swap;}
-@font-face{font-family:Recoletta;src:url(https://assets.misfits.co/Recoleta-SemiBold.woff);font-style:normal;font-weight:500;font-display: swap;}
-@font-face{font-family:poppins2;src:url(https://static.klaviyo.com/onsite/hosted-fonts/Poppins/latin/poppins_latin_italic_700.woff2);font-style:italic;font-weight:700;font-display: swap;}
+@font-face{font-family:Circular;src:url(https://misfits-stacking-game.web.app/circular-book.woff);font-style:normal;font-weight:200;font-display: swap;}
+@font-face{font-family:Recoletta;src:url(https://misfits-stacking-game.web.app/Recoleta-Medium.woff2);font-style:normal;font-weight:400;font-display: swap;}
+@font-face{font-family:Recoletta-Semibold;src:url(https://misfits-stacking-game.web.app/Recoleta-SemiBold.woff);font-style:normal;font-weight:500;font-display: swap;}
