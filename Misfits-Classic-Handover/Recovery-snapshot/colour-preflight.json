@@ -1,0 +1,14 @@
+{
+  "resolution": [
+    3840,
+    2160
+  ],
+  "decoded_rgb_identical_to_source": true,
+  "edge_rgb": [
+    2,
+    26,
+    25
+  ],
+  "dither_preserved": true,
+  "codec": "libx264rgb crf0"
+}
