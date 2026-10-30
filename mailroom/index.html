@@ -9,7 +9,6 @@ img{max-width:100%}
 [hidden]{display:none!important}
 </style></head><body>
 <title>Misfits Sales Mailroom</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
@@ -117,6 +116,18 @@ button { cursor: pointer; }
 .row .r2, .row .r3 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row .r3 { color: var(--muted); font-size: 13px; }
 .empty { padding: 28px 18px; color: var(--muted); }
+.ctx { border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); padding: 12px 16px; display: grid; gap: 4px; }
+.ctx p { margin: 0; line-height: 1.5; }
+.ctx p + p { margin-bottom: 8px; }
+.welcome { padding: 28px 24px; max-width: 560px; display: grid; gap: 12px; }
+.welcome h1 { margin: 0; font-size: 20px; font-weight: 600; }
+.welcome p { margin: 0; line-height: 1.5; }
+.welcome .prog { color: var(--muted); }
+.mhelp { display: none; border-bottom: 1px solid var(--line); }
+.welcome ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; line-height: 1.5; }
+.welcome .hint { color: var(--muted); font-size: 12px; }
+.wbtns { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.wbtns .send:disabled { opacity: .45; cursor: default; }
 
 .reader { overflow-y: auto; min-height: 0; min-width: 0; padding: 0 0 24px; }
 .rhead { padding: 14px 20px 6px; display: grid; gap: 4px; }
@@ -163,6 +174,7 @@ button { cursor: pointer; }
   .side { flex-direction: row; border-right: 0; border-bottom: 1px solid var(--line); padding: 6px 8px; }
   .side button { width: auto; gap: 8px; }
   .list { border-right: 0; }
+  .mhelp { display: block; }
   .app.reading .list { display: none; }
   .app:not(.reading) .reader { display: none; }
   .back { display: inline-block; }
@@ -185,10 +197,10 @@ button { cursor: pointer; }
 (function () {
   var CASES = [
     {
-      id: "hr", name: "Hopeless Romantic Books", subject: "Handover: Hopeless Romantic Books",
+      id: "hr", buyer: "Shelly Zevlever", name: "Hopeless Romantic Books", subject: "A little friendly competition for Hopeless Romantic?",
       date: "Oct 30", full: "Fri, Oct 30, 2026, 9:20 AM",
       context: "Hopeless Romantic Books is an independent Toronto bookshop with two locations (Queen St W and Union Station) that also sells puzzles and games. A previous team member pitched Classic Edition and the new Pocket Edition, and the manager, Shelly, has now replied with a small, cautious trial request. Pocket Edition is not yet in stock. It ships in master cartons of 12 (Classic ships in cartons of 6), and we avoid splitting cartons for wholesale orders. Pocket wholesale is C$18 against a C$35.99 RRP.",
-      task: "Assume this account has now been handed to you. Shelly's last email is still waiting for a reply. Write your response.",
+      task: "Assume this account has now been handed to you. Shelly's last email is still waiting for a reply. Decide whether you would respond. If you would, draft the email you would send. If you would not, explain your reasoning in the Note to Alexander.",
       replyTo: "Shelly <shelly@hopelessromanticbooks.com>", replySubject: "Re: A little friendly competition for Hopeless Romantic?",
       msgs: [
         { us: 1, from: "Misfits team", addr: "operations@misfits.co", to: "Hopeless Romantic Books", date: "Wed, Oct 7, 2026, 5:12 PM", subj: "A little friendly competition for Hopeless Romantic?",
@@ -204,10 +216,10 @@ button { cursor: pointer; }
       ]
     },
     {
-      id: "bt", name: "Brown Thomas | Arnotts", subject: "Handover: Brown Thomas | Arnotts",
+      id: "bt", buyer: "Roslyn Ellis", name: "Brown Thomas | Arnotts", subject: "Buying questions re: games at Brown Thomas",
       date: "Oct 30", full: "Fri, Oct 30, 2026, 9:12 AM",
       context: "Brown Thomas | Arnotts is a Dublin department store group. A Misfits team member approached Roslyn Ellis, Senior Buyer for Seasonal, Toys & Food. She replied politely and copied in a colleague, Shauna, to review whether there was an opportunity. The team sent two buying-process questions and later an update. There has been no reply since.",
-      task: "Assume this account has now been handed to you. Review the exchange below. What, if anything, would you do next?",
+      task: "Assume this account has now been handed to you. Decide whether you would respond. If you would, draft the email you would send. If you would not, explain your reasoning in the Note to Alexander.",
       replyTo: "Roslyn Ellis <rellis@brownthomas.com>, Shauna", replySubject: "Re: Buying questions re: games at Brown Thomas",
       msgs: [
         { us: 1, from: "Misfits team", addr: "hello@misfits.co", to: "Roslyn Ellis", date: "Tue, Oct 20, 2026, 09:54", subj: "Buying questions re: games at Brown Thomas",
@@ -221,11 +233,11 @@ button { cursor: pointer; }
       ]
     },
     {
-      id: "mon", name: "Monocle", subject: "Handover: Monocle",
+      id: "mon", buyer: "Raffael Lienert", name: "Monocle", subject: "Misfits, a wooden balancing game from Vancouver",
       date: "Oct 30", full: "Fri, Oct 30, 2026, 9:05 AM",
-      context: "Monocle operates media, hospitality and retail businesses, including shops in Toronto, London, Paris and Zurich. The initial response was positive: its Head of Retail liked the product, asked where it was made and introduced colleagues to review the wholesale details. The conversation then stalled during an internal transition and a Toronto café project. The Toronto contact subsequently left, a new point of contact was introduced, and Monocle asked for more time.",
-      task: "Assume this account has now been handed to you. Review the exchange below. What, if anything, would you do next?",
-      replyTo: "Raffael Lienert <rl@monocle.com>, Stephanie", replySubject: "Re: Misfits and Monocle",
+      context: "Monocle operates media, hospitality and retail businesses, with shops in Toronto, London, Paris and Zurich. Misfits first made contact in early October. The thread is below; the most recent message is from Monocle.",
+      task: "Assume this account has now been handed to you. Decide whether you would respond. If you would, draft the email you would send. If you would not, explain your reasoning in the Note to Alexander.",
+      replyTo: "Raffael Lienert <rl@monocle.com>, Stephanie", replySubject: "Re: Misfits, a wooden balancing game from Vancouver",
       msgs: [
         { us: 1, from: "Misfits team", addr: "operations@misfits.co", to: "Pippa and team", date: "Wed, 7 Oct 2026, 23:33",
           body: "Hello Pippa and team,\n\nI was browsing Monocle's selection of home objects and gifts and thought Misfits might be an interesting fit. With your role overseeing retail and hospitality, I hoped you'd be the right person to introduce it to.\n\nI'm from Misfits (https://www.misfits.co/). We're an independent, Canadian-owned business based in Vancouver, BC. Our founder, graphic designer Alexander Neumann, created a wooden balancing game whose irregular pieces turn a simple stacking challenge into some wonderfully precarious towers. The Telegraph has dubbed us “Jenga for lunatics.”\n\nI thought the combination of distinctive shapes and hands-on play might appeal to Monocle's customers. The pieces invite people to experiment, and each tower becomes a small, unlikely construction to admire before someone risks the next move.\n\nWe'd love to explore whether Misfits could suit your shop collection, in Toronto or further afield. Would you be open to taking a look at some product photographs and wholesale details?\n\nThanks!" },
@@ -248,10 +260,10 @@ button { cursor: pointer; }
       ]
     },
     {
-      id: "hex", name: "Hex & Company", subject: "Handover: Hex & Company",
+      id: "hex", buyer: "HexNYC", name: "Hex & Company", subject: "Buying Questions for Hex NYC",
       date: "Oct 9", full: "Fri, Oct 9, 2026, 9:02 AM",
       context: "Hex & Company is a board-game café and retailer in New York. A previous sales representative initiated the outreach, and the retailer asked for pricing and shipping information. After receiving the wholesale terms, Hex said the terms were too onerous and ultimately that every part of them was an issue.",
-      task: "Assume this account has now been handed to you. Review the exchange below. Write your response as if you're picking up this account now and there's been a few days of time delay.",
+      task: "Assume this account has now been handed to you and a few days have passed. Decide whether you would respond. If you would, draft the email you would send. If you would not, explain your reasoning in the Note to Alexander.",
       replyTo: "HexNYC <us@hexnyc.com>", replySubject: "Re: Buying Questions for Hex NYC",
       msgs: [
         { us: 1, from: "Misfits team", addr: "", to: "HexNYC", date: "Mon, Oct 5, 2026, 8:36 AM", subj: "Buying Questions for Hex NYC",
@@ -272,11 +284,6 @@ button { cursor: pointer; }
     }
   ];
 
-  var INTRO = {
-    subject: "Read me first: how this inbox works", date: "Oct 30", full: "Fri, Oct 30, 2026, 9:30 AM",
-    body: "Hi,\n\nWelcome to the Misfits Sales Mailroom.\n\nThe four emails below are recent, real threads with retailers: a board game caf\u00e9, a design-led store, a department store and an indie bookstore. Our details are scrubbed (our staff appear as \u201cMisfits team\u201d), but the people on the other side are real, so treat them that way.\n\nYour task: read each thread and reply as needed. If you wouldn't reply, tick \u201cI would not reply to this retailer\u201d and explain why in the Note to Alexander tab. That's a valid answer.\n\n\u2022 Reply to retailer: what you'd send.\n\u2022 Note to Alexander: for me only. What's happening, what you'd do next, what goes in HubSpot.\n\u2022 Drafts save as you type. Press Send when a case is done. Nothing goes to a real retailer.\n\u2022 If the page says answers were only saved on this device, open Sent, use Copy all replies, and email me the text.\n\nTake as long as you need. Please don't use AI or generative tools.\n\nThanks,\nAlexander"
-  };
-
   var FORM_URL = "";
   var LS = "misfits-mail-v1";
   var S = { read: {}, drafts: {}, sent: [], opened: {} };
@@ -286,9 +293,7 @@ button { cursor: pointer; }
   } catch (e) {}
   function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
 
-  var ui = { folder: "inbox", caseId: null, sentSel: null, open: {}, ctab: {}, reopen: {}, status: {}, err: {}, saved: [], isOwner: false, db: null, copyText: null };
-
-  if (!Object.keys(S.opened).length && !S.sent.length) ui.caseId = "intro";
+  var ui = { folder: "welcome", caseId: null, sentSel: null, open: {}, ctab: {}, reopen: {}, status: {}, err: {}, saved: [], isOwner: false, db: null, copyText: null };
 
   var app = document.getElementById("app");
   var sideEl = document.getElementById("side");
@@ -300,28 +305,41 @@ button { cursor: pointer; }
   function fmt(iso) { try { return new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { return iso; } }
   function mins(sec) { if (sec == null) return "n/a"; return sec < 90 ? sec + " sec" : Math.round(sec / 60) + " min"; }
   function byId(id) { for (var i = 0; i < CASES.length; i++) if (CASES[i].id === id) return CASES[i]; return null; }
+  function answeredIds() { var o = {}; S.sent.forEach(function (x) { o[x.caseId] = 1; }); return o; }
+  function answeredCount() { return Object.keys(answeredIds()).length; }
+  function welcomeHtml() {
+    var n = answeredCount();
+    return '<div class="welcome"><h1>Misfits Sales Mailroom</h1>' +
+      '<p>The ' + CASES.length + ' emails in your inbox are recent, real threads with retailers: a board game café, a design-led store, a department store and an indie bookstore. Our details are scrubbed (our staff appear as “Misfits team”), but the people on the other side are real, so treat them that way.</p>' +
+      '<p><b>Your task:</b> read each thread and reply as needed. If you would not reply, tick “I would not reply to this retailer” and explain why in the Note to Alexander tab. That is a valid answer.</p>' +
+      '<ul><li><b>Reply to retailer:</b> what you would send.</li><li><b>Note to Alexander:</b> for me only. What is happening, what you would do next, what goes in HubSpot.</li><li>Drafts save as you type. Press Send when a case is done. Nothing goes to a real retailer.</li></ul>' +
+      '<p>Take as long as you need. Please refrain from using AI or generative tools.</p>' +
+      '<p class="prog"><b>' + n + ' of ' + CASES.length + '</b> answered</p>' +
+      '<div class="wbtns"><button type="button" class="send" data-act="copyall"' + (n ? "" : " disabled") + '>Copy my answers</button>' +
+      '<button type="button" class="linkbtn" data-act="folder" data-f="inbox">Open inbox \u203a</button></div>' +
+      '<p class="hint">When you are done, press Copy my answers and email the text to Alexander.</p></div>';
+  }
+
   function sentItems() { return (ui.isOwner && ui.saved.length) ? ui.saved : S.sent.slice().reverse(); }
   function isOpen(c, i) { var o = ui.open[c.id]; if (o && Object.prototype.hasOwnProperty.call(o, i)) return o[i]; return i === c.msgs.length - 1; }
 
   function renderNav() {
     var unread = CASES.filter(function (c) { return !S.read[c.id]; }).length;
     sideEl.innerHTML =
+      '<button type="button" data-act="folder" data-f="welcome" aria-current="' + (ui.folder === "welcome") + '"><span>Welcome</span></button>' +
       '<button type="button" data-act="folder" data-f="inbox" aria-current="' + (ui.folder === "inbox") + '"><span>Inbox</span><span class="n">' + (unread || "") + '</span></button>' +
       '<button type="button" data-act="folder" data-f="sent" aria-current="' + (ui.folder === "sent") + '"><span>Sent</span><span class="n">' + (sentItems().length || "") + '</span></button>';
   }
 
   function renderList() {
     var h = "";
-    if (ui.folder === "inbox") {
-      h += '<div class="lhead"><span>Inbox</span></div>';
-      h += '<button type="button" class="row" data-act="open" data-id="intro" aria-selected="' + (ui.caseId === "intro") + '">' +
-        '<span class="r1"><b>Alexander Neumann</b><time>' + esc(INTRO.date) + '</time></span>' +
-        '<span class="r2">' + esc(INTRO.subject) + '</span>' +
-        '<span class="r3">' + esc(INTRO.body.replace(/\s+/g, " ")) + '</span></button>';
+    if (ui.folder === "inbox" || ui.folder === "welcome") {
+      var ans = answeredIds();
+      h += '<div class="lhead"><span>Inbox</span><span>' + answeredCount() + ' of ' + CASES.length + ' answered</span></div>';
       CASES.forEach(function (c) {
         var un = !S.read[c.id];
         h += '<button type="button" class="row' + (un ? " unread" : "") + '" data-act="open" data-id="' + c.id + '" aria-selected="' + (ui.caseId === c.id) + '">' +
-          '<span class="r1"><b>Alexander Neumann</b><time>' + esc(c.date) + '</time></span>' +
+          '<span class="r1"><b>' + esc(c.buyer) + '</b><time>' + (ans[c.id] ? "\u2713 Answered" : esc(c.date)) + '</time></span>' +
           '<span class="r2">' + esc(c.subject) + '</span>' +
           '<span class="r3">' + esc(c.context) + '</span></button>';
       });
@@ -377,8 +395,8 @@ button { cursor: pointer; }
     var st = ui.status[c.id];
     var txt = st === "saving" ? "Sending…"
       : st === "db" ? "<b>Sent.</b> Saved to Alexander's record."
-      : "<b>Sent.</b> Saved on this device. Open Sent and use Copy all replies to pass your answers to Alexander.";
-    return '<div class="banner">' + txt + '</div>';
+      : "<b>Sent.</b> Saved on this device. When you are done, press Copy my answers and email the text to Alexander.";
+    return '<div class="banner">' + txt + (st === "db" ? "" : ' <button type="button" class="linkbtn" data-act="copyall">Copy my answers</button>') + '</div>';
   }
 
   function renderReader() {
@@ -404,18 +422,13 @@ button { cursor: pointer; }
       }
     } else {
       var c = byId(ui.caseId);
-      if (ui.caseId === "intro") {
-        h = '<div class="rhead"><button type="button" class="back" data-act="back">\u2039 Inbox</button><h1>' + esc(INTRO.subject) + '</h1></div><div class="thread">' +
-          msgHtml({ us: 1, from: "Alexander Neumann", addr: "hello@misfits.co", to: "me", date: INTRO.full, body: INTRO.body }, true, 0, true) + '</div>';
-      } else if (!c) {
-        h = '<div class="empty">Select a message to read it.</div>';
+      if (!c) {
+        h = ui.folder === "welcome" ? welcomeHtml() : '<div class="empty">Select a message to read it.</div>';
       } else {
         var allOpen = c.msgs.every(function (m, i) { return isOpen(c, i); });
-        var hand = { us: 1, from: "Alexander Neumann", addr: "hello@misfits.co", to: "me", date: c.full,
-          body: "Hi,\n\nContext: " + c.context + "\n\nYour task: " + c.task + "\n\nThanks,\nAlexander" };
         h = '<div class="rhead"><button type="button" class="back" data-act="back">‹ Inbox</button><h1>' + esc(c.subject) + '</h1></div><div class="thread">' +
-          msgHtml(hand, true, 0, true) +
-          '<div class="fwd"><span>Forwarded thread · ' + c.msgs.length + ' messages, oldest first</span><button type="button" data-act="toggleall">' + (allOpen ? "Collapse all" : "Expand all") + '</button></div>';
+          '<div class="ctx"><p><b>Context</b></p><p>' + esc(c.context) + '</p><p><b>Your task</b></p><p>' + esc(c.task) + '</p></div>' +
+          '<div class="fwd"><span>Email thread · ' + c.msgs.length + ' messages, oldest first</span><button type="button" data-act="toggleall">' + (allOpen ? "Collapse all" : "Expand all") + '</button></div>';
         c.msgs.forEach(function (m, i) { h += msgHtml(m, isOpen(c, i), i, false); });
         var mine = S.sent.filter(function (x) { return x.caseId === c.id; });
         mine.forEach(function (x) {
@@ -439,7 +452,7 @@ button { cursor: pointer; }
 
   function render() {
     renderNav(); renderList(); renderReader();
-    var reading = ui.folder === "inbox" ? !!ui.caseId : (ui.sentSel != null || ui.copyText != null);
+    var reading = ui.folder === "welcome" ? true : ui.folder === "inbox" ? !!ui.caseId : (ui.sentSel != null || ui.copyText != null);
     app.classList.toggle("reading", reading);
   }
 
@@ -501,6 +514,7 @@ button { cursor: pointer; }
       render();
     } else if (a === "open") {
       var id = t.getAttribute("data-id");
+      ui.folder = "inbox"; ui.sentSel = null; ui.copyText = null;
       ui.caseId = id; S.read[id] = true;
       if (!S.opened[id]) S.opened[id] = Date.now();
       save(); render();
@@ -525,10 +539,11 @@ button { cursor: pointer; }
       ui.copyText = null; render();
     } else if (a === "copyall") {
       var text = allText();
-      var fallback = function () { ui.copyText = text; ui.sentSel = null; render(); };
+      var orig = t.textContent;
+      var fallback = function () { ui.copyText = text; ui.sentSel = null; ui.folder = "sent"; render(); };
       try {
         navigator.clipboard.writeText(text).then(function () {
-          t.textContent = "Copied"; setTimeout(function () { if (t.isConnected) t.textContent = "Copy all replies"; }, 1600);
+          t.textContent = "Copied"; setTimeout(function () { if (t.isConnected) t.textContent = orig; }, 1600);
         }, fallback);
       } catch (e) { fallback(); }
     }
