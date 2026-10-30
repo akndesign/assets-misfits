@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style></head><body>
+<title>Misfits Sales Mailroom</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Layout: three-pane mail client (folders, message list, reading pane) that collapses to one pane on a phone. */
+:root {
+  --bg: #eceff3;
+  --panel: #ffffff;
+  --panel2: #f6f8fa;
+  --line: #dde2e8;
+  --ink: #18202b;
+  --muted: #586374;
+  --faint: #7b8696;
+  --accent: #2a56c6;
+  --accent-ink: #ffffff;
+  --unread: #eaf0fd;
+  --sel: #dfe8fb;
+  --us: #e3ebfb;
+  --us-ink: #1f3f8f;
+  --them: #ece9f6;
+  --them-ink: #473a82;
+  --ok: #1f7a4d;
+  --bad: #b3261e;
+  --font: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1318; --panel: #171c23; --panel2: #1c222b; --line: #2a323d; --ink: #e6eaf0;
+    --muted: #a2adbb; --faint: #8893a1; --accent: #7fa2f5; --accent-ink: #0f1318;
+    --unread: #1d2840; --sel: #243252; --us: #22314f; --us-ink: #bcd0fa;
+    --them: #2b2744; --them-ink: #cfc7f3; --ok: #6cc596; --bad: #f2928b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1318; --panel: #171c23; --panel2: #1c222b; --line: #2a323d; --ink: #e6eaf0;
+  --muted: #a2adbb; --faint: #8893a1; --accent: #7fa2f5; --accent-ink: #0f1318;
+  --unread: #1d2840; --sel: #243252; --us: #22314f; --us-ink: #bcd0fa;
+  --them: #2b2744; --them-ink: #cfc7f3; --ok: #6cc596; --bad: #f2928b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+  padding-block: 12px;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.top {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel2);
+}
+.brand { font-weight: 600; font-size: 15px; letter-spacing: .01em; }
+.top .sub { color: var(--muted); font-size: 12px; }
+.panes {
+  display: grid;
+  grid-template-columns: 150px 320px minmax(0, 1fr);
+  min-height: 0;
+}
+.side { border-right: 1px solid var(--line); padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; background: var(--panel2); }
+.side button {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; padding: 7px 10px; border: 0; border-radius: 6px; background: transparent; text-align: left;
+  color: var(--muted);
+}
+.side button[aria-current="true"] { background: var(--sel); color: var(--ink); font-weight: 600; }
+.side .n { font-family: var(--mono); font-size: 12px; }
+
+.list { border-right: 1px solid var(--line); overflow-y: auto; min-height: 0; min-width: 0; }
+.lhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.lhead button { text-transform: none; letter-spacing: 0; font-size: 12px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.row {
+  display: grid; gap: 1px; width: 100%; text-align: left;
+  padding: 10px 14px; border: 0; border-bottom: 1px solid var(--line); background: transparent;
+}
+.row.unread { background: var(--unread); }
+.row[aria-selected="true"] { background: var(--sel); }
+.row .r1 { display: flex; justify-content: space-between; gap: 8px; }
+.row .r1 b { font-weight: 500; }
+.row.unread .r1 b, .row.unread .r2 { font-weight: 600; }
+.row time { color: var(--faint); font-size: 12px; white-space: nowrap; }
+.row .r2, .row .r3 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .r3 { color: var(--muted); font-size: 13px; }
+.empty { padding: 28px 18px; color: var(--muted); }
+
+.reader { overflow-y: auto; min-height: 0; min-width: 0; padding: 0 0 24px; }
+.rhead { padding: 14px 20px 6px; display: grid; gap: 4px; }
+.rhead h1 { margin: 0; font-size: 19px; font-weight: 600; line-height: 1.3; text-wrap: balance; }
+.back { display: none; justify-self: start; border: 0; background: transparent; color: var(--accent); padding: 0; margin-bottom: 4px; }
+.thread { padding: 6px 20px 0; display: grid; gap: 10px; max-width: 760px; }
+.msg { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); min-width: 0; }
+.mh { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 10px 12px; border: 0; background: transparent; text-align: left; }
+.msg.static .mh { cursor: default; }
+.av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 600; background: var(--them); color: var(--them-ink); }
+.av.us { background: var(--us); color: var(--us-ink); }
+.who { flex: 1; min-width: 0; }
+.who .nm b { font-weight: 600; }
+.who .addr { color: var(--faint); font-size: 12px; margin-left: 4px; overflow-wrap: anywhere; }
+.who .meta { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.msg:not(.open) .meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.when { color: var(--faint); font-size: 12px; white-space: nowrap; font-family: var(--mono); }
+.mb { padding: 2px 14px 14px 52px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+.mb .lab { font-weight: 600; }
+.fwd { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.fwd button, .linkbtn { border: 0; background: transparent; color: var(--accent); padding: 0; text-transform: none; letter-spacing: 0; font-size: 13px; }
+
+.compose { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); margin-top: 8px; overflow: hidden; }
+.ctabs { display: flex; gap: 2px; padding: 6px 8px 0; background: var(--panel2); border-bottom: 1px solid var(--line); }
+.ctabs button { border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 7px 10px; color: var(--muted); }
+.ctabs button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+.fld { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--line); }
+.fld label { color: var(--muted); width: 56px; flex: none; font-size: 13px; }
+.fld input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 4px 0; }
+.compose textarea { display: block; width: 100%; min-height: 220px; resize: vertical; border: 0; padding: 12px 14px; background: transparent; line-height: 1.6; }
+.hint { padding: 8px 14px 0; color: var(--muted); font-size: 12px; }
+.cfoot { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-top: 1px solid var(--line); background: var(--panel2); }
+.send { border: 0; border-radius: 6px; padding: 8px 18px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.err { color: var(--bad); font-size: 13px; }
+.nr { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel2); font-size: 13px; }
+.banner { padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); color: var(--muted); font-size: 13px; }
+.banner b { color: var(--ok); font-weight: 600; }
+.copybox { display: grid; gap: 6px; padding: 14px 20px; }
+.copybox textarea { width: 100%; min-height: 200px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel2); padding: 8px; font-family: var(--mono); font-size: 12px; }
+.sentmeta { color: var(--muted); font-size: 13px; display: grid; gap: 2px; padding: 0 20px 6px; font-family: var(--mono); }
+
+@media (max-width: 860px) {
+  .panes { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .side { flex-direction: row; border-right: 0; border-bottom: 1px solid var(--line); padding: 6px 8px; }
+  .side button { width: auto; gap: 8px; }
+  .list { border-right: 0; }
+  .app.reading .list { display: none; }
+  .app:not(.reading) .reader { display: none; }
+  .back { display: inline-block; }
+  .rhead, .thread { padding-left: 14px; padding-right: 14px; }
+  .mb { padding-left: 14px; }
+  .copybox, .sentmeta { padding-left: 14px; padding-right: 14px; }
+}
+</style>
+
+<div class="app" id="app">
+  <header class="top"><span class="brand">Misfits Sales Mailroom</span><span class="sub">Interview inbox</span></header>
+  <div class="panes">
+    <nav class="side" id="side" aria-label="Folders"></nav>
+    <section class="list" id="list" aria-label="Messages"></section>
+    <article class="reader" id="reader" aria-live="polite"></article>
+  </div>
+</div>
+
+<script>
+(function () {
+  var CASES = [
+    {
+      id: "hr", name: "Hopeless Romantic Books", subject: "Handover: Hopeless Romantic Books",
+      date: "Oct 30", full: "Fri, Oct 30, 2026, 9:20 AM",
+      context: "Hopeless Romantic Books is an independent Toronto bookshop with two locations (Queen St W and Union Station) that also sells puzzles and games. A previous team member pitched Classic Edition and the new Pocket Edition, and the manager, Shelly, has now replied with a small, cautious trial request. Pocket Edition is not yet in stock. It ships in master cartons of 12 (Classic ships in cartons of 6), and we avoid splitting cartons for wholesale orders. Pocket wholesale is C$18 against a C$35.99 RRP.",
+      task: "Assume this account has now been handed to you. Shelly's last email is still waiting for a reply. Write your response.",
+      replyTo: "Shelly <shelly@hopelessromanticbooks.com>", replySubject: "Re: A little friendly competition for Hopeless Romantic?",
+      msgs: [
+        { us: 1, from: "Misfits team", addr: "operations@misfits.co", to: "Hopeless Romantic Books", date: "Wed, Oct 7, 2026, 5:12 PM", subj: "A little friendly competition for Hopeless Romantic?",
+          body: "Hello Kearston, Serena and team,\n\nI spotted the puzzles and games alongside your romance books and thought Misfits might be a fun addition for customers picking out a date-night activity or a gift for their favourite person. How do you choose what joins the shelves? Do you work directly with independent game makers?\n\nI'm from Misfits (https://www.misfits.co/). We're an independent, Canadian-owned business based in Vancouver, BC, making a wooden balancing game with irregular pieces that turn a simple stacking challenge into some wonderfully precarious towers. The Telegraph has dubbed us “Jenga for lunatics.”\n\nIt's easy to get into, with plenty of opportunities to cheer each other on or get a little competitive. I thought that mix might appeal to your readers, especially anyone whose idea of a cosy night in includes some friendly rivalry.\n\nI'd love to hear whether it sounds like a fit for Hopeless Romantic. Would you be interested in taking a closer look?\n\nThanks!\n\nOperations — Misfits: A New Stacking Game — Misfits.co" },
+        { us: 1, from: "Misfits team", addr: "operations@misfits.co", to: "Kearston", date: "Thu, Oct 15, 2026, 12:45 PM",
+          body: "Afternoon Kearston,\n\nNo worries at all, I completely understand the busy season!\n\nI've attached our wholesale sell sheet for Classic Edition, which includes product details and pricing.\n\nWe also have a new travel-friendly format, Misfits: Pocket Edition, featuring 20 wooden blocks, and nine entirely new shapes. It was developed following extensive feedback from a Nordstrom buyer who saw an opportunity for a more portable, giftable version of the game.\n\nPocket Edition retails for $35.99 CAD, with a wholesale price of $18 per unit. I've also attached a few photographs of Pocket Edition so you can get a better look.\n\nLet me know if you have any further questions, or if either is of interest!\n\nOperations — Misfits: A New Stacking Game — Misfits.co" },
+        { us: 0, from: "Shelly Zevlever", addr: "shelly@hopelessromanticbooks.com", to: "Misfits team", date: "Sun, Oct 18, 2026, 12:36 PM",
+          body: "Hi there,\n\nThanks for reaching out! These sound like a lot of fun and something we're open to testing out in the store. We generally love supporting other independent Canadian businesses, so I'd be interested in taking a closer look.\n\nDo you have a wholesale catalog or some pricing info you could send over?\n\nWarmly,\nShelly (they/them)\nManager\nHopeless Romantic Books" },
+        { us: 1, from: "Misfits team", addr: "operations@misfits.co", to: "Shelly", date: "Sun, Oct 18, 2026, 3:46 PM",
+          body: "Hey Shelly,\n\nLovely to hear from you! I already sent an email to your colleague at your general email, but here it is again.\n\nOur Classic Edition is being restocked by end of this month.\n\nLet me know if you'd like to pursue further and if you have any questions :)\n\nOperations — Misfits: A New Stacking Game — Misfits.co" },
+        { us: 0, from: "Shelly Zevlever", addr: "shelly@hopelessromanticbooks.com", to: "Misfits team", date: "Tue, Oct 20, 2026, 12:52 PM",
+          body: "Hi there,\n\nThanks so much for sending this our way! I'll be honest, we're a little unsure how a game like this will do alongside the books, so we'd want to start very small and see how it goes before committing to anything bigger.\n\nWould we be able to try out 5 copies of the Mini Edition?\n\nDo you also have any information on that one that we could use to list the game on our site?\n\nWarmly,\nShelly (they/them)\nManager\nHopeless Romantic Books" }
+      ]
+    },
+    {
+      id: "bt", name: "Brown Thomas | Arnotts", subject: "Handover: Brown Thomas | Arnotts",
+      date: "Oct 30", full: "Fri, Oct 30, 2026, 9:12 AM",
+      context: "Brown Thomas | Arnotts is a Dublin department store group. A Misfits team member approached Roslyn Ellis, Senior Buyer for Seasonal, Toys & Food. She replied politely and copied in a colleague, Shauna, to review whether there was an opportunity. The team sent two buying-process questions and later an update. There has been no reply since.",
+      task: "Assume this account has now been handed to you. Review the exchange below. What, if anything, would you do next?",
+      replyTo: "Roslyn Ellis <rellis@brownthomas.com>, Shauna", replySubject: "Re: Buying questions re: games at Brown Thomas",
+      msgs: [
+        { us: 1, from: "Misfits team", addr: "hello@misfits.co", to: "Roslyn Ellis", date: "Tue, Oct 20, 2026, 09:54", subj: "Buying questions re: games at Brown Thomas",
+          body: "Morning Roslyn!\n\nHope you don't mind me reaching out.\n\nI'm originally from Dublin and now help lead retail partnerships for Misfits—a design-led wooden stacking game based in Canada. Growing up with Arnotts and Brown Thomas as Dublin staples, I've been following your gifting and games curation and thought Misfits would be a natural fit for your shelves!\n\nOur founder, graphic designer Alexander Neumann, created Misfits as part of a design competition studying in London. It's a rather different take on the traditional stacking game, where players balance forty oddly shaped wooden blocks to build wonderfully precarious towers. There's no rulebook to learn, and it's designed to be as beautiful sitting on a shelf as it is fun to play.\n\nWe've sold out three Christmases running, previously sold through Oliver Bonas in the UK, and secured a 540-unit order from US bookseller Books-A-Million. We've also discussed stocking Misfits with John Lewis in the UK.\n\nI looked into Brown Thomas' gifting and games selection and thought our Classic Edition might be an interesting fit.\n\nWould you be the right person to speak with about games and gifting? If so, I just have a few questions for you regarding your purchasing process!\n\nCheers,\n\nRetail Partnerships — Misfits.co\nCelebrating 3,500 units sold across 200+ stores on three continents\nAs featured in BBC Radio 2, The Times, The Telegraph, Monocle, Stylist and Shut Up and Sit Down" },
+        { us: 0, from: "Roslyn Ellis", addr: "rellis@brownthomas.com", to: "Misfits team, cc Shauna", date: "Tue, Oct 20, 2026",
+          body: "Thanks\n\nThat is so lovely to hear.\n\nAdding Shauna to CC also to review if there is an opportunity.\n\nBest regards,\n\nRoslyn Ellis\nSenior Buyer, Seasonal, Toys & Food\nBrown Thomas | Arnotts\n12 Henry St | Dublin 1" },
+        { us: 1, from: "Misfits team", addr: "hello@misfits.co", to: "Roslyn Ellis, Shauna", date: "Tue, Oct 20, 2026, 4:09 AM",
+          body: "Hi Roslyn and Shauna,\n\nMuch appreciated, and thank you for introducing Shauna!\n\nWhen you have a moment, I have two initial questions for you both:\n\n1. Does your buying team typically purchase games directly from independent publishers, or through distributors?\n\n2. Are you still considering additions to your Christmas gifting assortment this year, or would you be looking ahead to 2027?\n\nHappy to share a sell sheet for Misfits and further product information if helpful!\n\nCheers,\n\nRetail Partnerships — Misfits.co\nCelebrating 3,500 units sold across 200+ stores on three continents\nAs featured in BBC Radio 2, The Times, The Telegraph, Monocle, Stylist and Shut Up and Sit Down" },
+        { us: 1, from: "Misfits team", addr: "hello@misfits.co", to: "Roslyn Ellis, Shauna", date: "Thu, Oct 29, 2026, 1:04 AM",
+          body: "Morning Roslyn and Shauna,\n\nHope you're both keeping well!\n\nA quick update from our side — our Classic Edition stock has arrived at London Gateway and is expected to clear customs shortly.\n\nI'd also be grateful for any insights you could share on the buying process for games and gifts at Brown Thomas and Arnotts, whenever you have a chance.\n\nThanks a mill!\n\nRetail Partnerships — Misfits.co\nCelebrating 3,500 units sold across 200+ stores on three continents\nAs featured in BBC Radio 2, The Times, The Telegraph, Monocle, Stylist and Shut Up and Sit Down" }
+      ]
+    },
+    {
+      id: "mon", name: "Monocle", subject: "Handover: Monocle",
+      date: "Oct 30", full: "Fri, Oct 30, 2026, 9:05 AM",
+      context: "Monocle operates media, hospitality and retail businesses, including shops in Toronto, London, Paris and Zurich. The initial response was positive: its Head of Retail liked the product, asked where it was made and introduced colleagues to review the wholesale details. The conversation then stalled during an internal transition and a Toronto café project. The Toronto contact subsequently left, a new point of contact was introduced, and Monocle asked for more time.",
+      task: "Assume this account has now been handed to you. Review the exchange below. What, if anything, would you do next?",
+      replyTo: "Raffael Lienert <rl@monocle.com>, Stephanie", replySubject: "Re: Misfits and Monocle",
+      msgs: [
+        { us: 1, from: "Misfits team", addr: "operations@misfits.co", to: "Pippa and team", date: "Wed, 7 Oct 2026, 23:33",
+          body: "Hello Pippa and team,\n\nI was browsing Monocle's selection of home objects and gifts and thought Misfits might be an interesting fit. With your role overseeing retail and hospitality, I hoped you'd be the right person to introduce it to.\n\nI'm from Misfits (https://www.misfits.co/). We're an independent, Canadian-owned business based in Vancouver, BC. Our founder, graphic designer Alexander Neumann, created a wooden balancing game whose irregular pieces turn a simple stacking challenge into some wonderfully precarious towers. The Telegraph has dubbed us “Jenga for lunatics.”\n\nI thought the combination of distinctive shapes and hands-on play might appeal to Monocle's customers. The pieces invite people to experiment, and each tower becomes a small, unlikely construction to admire before someone risks the next move.\n\nWe'd love to explore whether Misfits could suit your shop collection, in Toronto or further afield. Would you be open to taking a look at some product photographs and wholesale details?\n\nThanks!" },
+        { us: 0, from: "Philippa Cooper", addr: "pc@monocle.com", to: "Misfits team", date: "Thu, Oct 8, 2026, 3:13 AM",
+          body: "Hi there,\n\nThank you for reaching out - your product looks very nice & great for the upcoming gifting season. Are they made in Canada too - if not where?\n\nIf you can share your wholesale details that would be great. I am including Catalina, our Toronto manager as we like to have a selection of \"local products\" in our stores & also Raffi our Senior Ops manager, who can support on planning. Are you stocked in many other stores in Toronto?\n\nMany thanks,\n\nPippa Cooper\nHead of Retail and Hospitality\nMONOCLE" },
+        { us: 1, from: "Misfits team", addr: "operations@misfits.co", to: "Pippa, Catalina, Raffi", date: "Thu, Oct 8, 2026, 1:31 PM",
+          body: "Afternoon Pippa,\n\nThanks for the kind words!\n\nRegarding your question, our games are currently manufactured in China. We explored manufacturing in Canada, but the custom wooden components weren't commercially viable to produce locally at the time. It's something we hope to revisit as we grow!\n\nI've attached our Canadian wholesale sell sheet, which includes pricing and product details for Catalina's review. We're currently stocked by a number of independent board game cafés and retailers in Toronto, alongside national retailers in the US and UK.\n\nAlexander also mentioned that, as Misfits was originally conceived and developed in London, having the game stocked by Monocle there would be particularly meaningful to him. We already work with a number of independent and national retailers across the UK, and can supply your Toronto, London, Paris and Zurich stores (we hold inventory in both Canada and the UK). We'd equally be happy to start with whichever location you feel would be the strongest fit.\n\nThis also completely slipped my mind when I first reached out -- another reason I thought of Monocle is that Alexander was interviewed by your colleagues at Monocle Radio, last year:\n\nhttp://monocle.com/radio/shows/the-entrepreneurs/732/\n\nI'll be away tomorrow, but I've copied Alexander here should you have any further questions in the meantime.\n\nGreat to meet you, Catalina and Raffi. Looking forward to hearing your thoughts!\n\nRetail Partnerships — Misfits: A New Stacking Game — Misfits.co" },
+        { us: 1, from: "Alexander & Misfits Team", addr: "hello@misfits.co", to: "Pippa, Catalina, Raffi", date: "Tue, 13 Oct 2026, 08:02",
+          body: "Hi Pippa, Catalina and Raffi,\n\nGently checking in to see if you've had a chance to review the wholesale details we sent through on Thursday, and whether you have any initial thoughts or questions?\n\nIf you haven't had a chance to look everything over yet, no problem!\n\nAlexander Neumann\nFounder & Owner — Misfits: A New Stacking Game" },
+        { us: 0, from: "Raffael Lienert", addr: "rl@monocle.com", to: "Alexander", date: "Tue, 13 Oct 2026, 05:44",
+          body: "Dear Alexander,\n\nThanks for reaching out. Pippa is currently on annual leave and we're also busy with our café project in Toronto.\n\nWe're going through a period of transition at the moment and need a little extra time to catch up on matters such as product development.\n\nWe'll get back to you as soon as we can. Thanks for your patience and understanding.\n\nBest,\n\nRaffi\n\nRaffael Lienert\nSenior Operations Manager - Monocle Retail & Hospitality" },
+        { us: 1, from: "Alexander & Misfits Team", addr: "hello@misfits.co", to: "Raffi", date: "Tue, 13 Oct 2026, 11:47",
+          body: "Hey Raffi,\n\nNo worries! Hope the Toronto café project is going well.\n\nAlexander Neumann\nFounder & Owner — Misfits: A New Stacking Game" },
+        { us: 1, from: "Alexander & Misfits Team", addr: "hello@misfits.co", to: "Raffi, Pippa, Catalina", date: "Thu, 29 Oct 2026, 14:04",
+          body: "Morning Raffi, Pippa and Catalina,\n\nI hope the Toronto café project is going well!\n\nWould this be a better time to continue the conversation about Misfits? We'd be genuinely excited to partner with Monocle. With our holiday stock having just arrived at the Port of Vancouver, this felt like a natural time to reconnect.\n\nIf helpful, I'd be happy to send Catalina a sample to look over, or we could begin with a small Toronto-only order so you can see how it sells before expanding further. Orders placed by mid-November would reach you in time for the gifting season.\n\nIf the timing still isn't right, no problem—we'd be happy to reconnect in the new year!\n\nAlexander\n\nAlexander Neumann\nFounder & Owner — Misfits: A New Stacking Game" },
+        { us: 0, from: "Raffael Lienert", addr: "rl@monocle.com", to: "Alexander, Stephanie", date: "Thu, Oct 29, 2026, 7:50 AM",
+          body: "Hello Alexander,\n\nThanks for reaching out. Please note that Catalina left the company at the end of last week.\n\nStephanie in cc now in charge and will be your main point of contact moving forward. However we still need a little more time.\n\nThanks for your patience.\n\nBest,\n\nRaffi\n\nRaffael Lienert\nSenior Operations Manager - Monocle Retail & Hospitality" },
+        { us: 1, from: "Alexander & Misfits Team", addr: "hello@misfits.co", to: "Raffi, Stephanie", date: "",
+          body: "Hi Raffi,\n\nNo problem, and thanks for the update!\n\nLovely to meet you, Stephanie. Looking forward to continuing the conversation whenever the timing is better for your team.\n\nAlexander" }
+      ]
+    },
+    {
+      id: "hex", name: "Hex & Company", subject: "Handover: Hex & Company",
+      date: "Oct 9", full: "Fri, Oct 9, 2026, 9:02 AM",
+      context: "Hex & Company is a board-game café and retailer in New York. A previous sales representative initiated the outreach, and the retailer asked for pricing and shipping information. After receiving the wholesale terms, Hex said the terms were too onerous and ultimately that every part of them was an issue.",
+      task: "Assume this account has now been handed to you. Review the exchange below. Write your response as if you're picking up this account now and there's been a few days of time delay.",
+      replyTo: "HexNYC <us@hexnyc.com>", replySubject: "Re: Buying Questions for Hex NYC",
+      msgs: [
+        { us: 1, from: "Misfits team", addr: "", to: "HexNYC", date: "Mon, Oct 5, 2026, 8:36 AM", subj: "Buying Questions for Hex NYC",
+          body: "Hey there, I hope you don't mind me reaching out! I came across your store online and noticed that you have a great selection of games. I'm reaching out as I had a few questions about how the team approaches tabletop game buying.\n\nI represent a design-led tabletop stacking game, Misfits, that the Telegraph dubbed 'Jenga for lunatics'. The game has already sold over 3,000 units with no paid ads, and we're looking to expand our US presence. I actually came across Misfits as a customer first — I bought a copy from an independent store, and loved the stacking game so much, I thought I'd help them out!\n\nWould you be the right person to speak with, or could you point me in the right direction? We're simply looking to better understand how you source tabletop games.\n\nThanks so much!" },
+        { us: 0, from: "HexNYC", addr: "us@hexnyc.com", to: "Misfits team", date: "Mon, Oct 5, 2026, 5:41 AM",
+          body: "Hi! Pricing info, shipping, etc? Thanks." },
+        { us: 1, from: "Misfits team", addr: "", to: "HexNYC", date: "Tue, Oct 6, 2026, 5:01 PM",
+          body: "Hey there,\n\nThanks for reaching back out. I've attached a PDF with further details.\n\n- MOQ is set at 24 units (4 cartons)\n- Wholesale pricing is $25 USD/unit\n- MSRP is $49.99 USD/unit\n- Shipping is $75 USD for orders between 24 and 42 units\n- Free shipping for orders over 48 units (8 cartons)\n\nLet me know if you any further questions, and we can proceed accordingly.\n\nBest," },
+        { us: 0, from: "HexNYC", addr: "us@hexnyc.com", to: "Misfits team", date: "Tue, Oct 6, 2026, 2:06 PM",
+          body: "Hi! Those terms seem too onerous, sorry!" },
+        { us: 1, from: "Misfits team", addr: "", to: "HexNYC", date: "Tue, Oct 6, 2026, 5:07 PM",
+          body: "What does a typical opening order look like for you? Would you be looking to place it in a single location or all three?\n\nBest," },
+        { us: 0, from: "HexNYC", addr: "us@hexnyc.com", to: "Misfits team", date: "Tue, 6 Oct 2026, 17:08 -0400",
+          body: "Hi! I think every part of the terms is an issue so it just won't make sense." },
+        { us: 1, from: "Misfits team", addr: "", to: "HexNYC", date: "",
+          body: "Thanks for the insight, and it's too bad there isn't a fit here.\n\nHave a nice week," }
+      ]
+    }
+  ];
+
+  var INTRO = {
+    subject: "Read me first: how this inbox works", date: "Oct 30", full: "Fri, Oct 30, 2026, 9:30 AM",
+    body: "Hi,\n\nWelcome to the Misfits Sales Mailroom.\n\nThe four emails below are recent, real threads with retailers: a board game caf\u00e9, a design-led store, a department store and an indie bookstore. Our details are scrubbed (our staff appear as \u201cMisfits team\u201d), but the people on the other side are real, so treat them that way.\n\nYour task: read each thread and reply as needed. If you wouldn't reply, tick \u201cI would not reply to this retailer\u201d and explain why in the Note to Alexander tab. That's a valid answer.\n\n\u2022 Reply to retailer: what you'd send.\n\u2022 Note to Alexander: for me only. What's happening, what you'd do next, what goes in HubSpot.\n\u2022 Drafts save as you type. Press Send when a case is done. Nothing goes to a real retailer.\n\u2022 If the page says answers were only saved on this device, open Sent, use Copy all replies, and email me the text.\n\nTake as long as you need. Please don't use AI or generative tools.\n\nThanks,\nAlexander"
+  };
+
+  var FORM_URL = "";
+  var LS = "misfits-mail-v1";
+  var S = { read: {}, drafts: {}, sent: [], opened: {} };
+  try {
+    var raw = localStorage.getItem(LS);
+    if (raw) { var p = JSON.parse(raw); S.read = p.read || {}; S.drafts = p.drafts || {}; S.sent = p.sent || []; S.opened = p.opened || {}; S.name = p.name || ""; }
+  } catch (e) {}
+  function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+
+  var ui = { folder: "inbox", caseId: null, sentSel: null, open: {}, ctab: {}, reopen: {}, status: {}, err: {}, saved: [], isOwner: false, db: null, copyText: null };
+
+  if (!Object.keys(S.opened).length && !S.sent.length) ui.caseId = "intro";
+
+  var app = document.getElementById("app");
+  var sideEl = document.getElementById("side");
+  var listEl = document.getElementById("list");
+  var readerEl = document.getElementById("reader");
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function initials(n) { var w = String(n).replace(/[^A-Za-z ]/g, "").split(" ").filter(Boolean); return ((w[0] || "?")[0] + (w[1] ? w[1][0] : "")).toUpperCase(); }
+  function fmt(iso) { try { return new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { return iso; } }
+  function mins(sec) { if (sec == null) return "n/a"; return sec < 90 ? sec + " sec" : Math.round(sec / 60) + " min"; }
+  function byId(id) { for (var i = 0; i < CASES.length; i++) if (CASES[i].id === id) return CASES[i]; return null; }
+  function sentItems() { return (ui.isOwner && ui.saved.length) ? ui.saved : S.sent.slice().reverse(); }
+  function isOpen(c, i) { var o = ui.open[c.id]; if (o && Object.prototype.hasOwnProperty.call(o, i)) return o[i]; return i === c.msgs.length - 1; }
+
+  function renderNav() {
+    var unread = CASES.filter(function (c) { return !S.read[c.id]; }).length;
+    sideEl.innerHTML =
+      '<button type="button" data-act="folder" data-f="inbox" aria-current="' + (ui.folder === "inbox") + '"><span>Inbox</span><span class="n">' + (unread || "") + '</span></button>' +
+      '<button type="button" data-act="folder" data-f="sent" aria-current="' + (ui.folder === "sent") + '"><span>Sent</span><span class="n">' + (sentItems().length || "") + '</span></button>';
+  }
+
+  function renderList() {
+    var h = "";
+    if (ui.folder === "inbox") {
+      h += '<div class="lhead"><span>Inbox</span></div>';
+      h += '<button type="button" class="row" data-act="open" data-id="intro" aria-selected="' + (ui.caseId === "intro") + '">' +
+        '<span class="r1"><b>Alexander Neumann</b><time>' + esc(INTRO.date) + '</time></span>' +
+        '<span class="r2">' + esc(INTRO.subject) + '</span>' +
+        '<span class="r3">' + esc(INTRO.body.replace(/\s+/g, " ")) + '</span></button>';
+      CASES.forEach(function (c) {
+        var un = !S.read[c.id];
+        h += '<button type="button" class="row' + (un ? " unread" : "") + '" data-act="open" data-id="' + c.id + '" aria-selected="' + (ui.caseId === c.id) + '">' +
+          '<span class="r1"><b>Alexander Neumann</b><time>' + esc(c.date) + '</time></span>' +
+          '<span class="r2">' + esc(c.subject) + '</span>' +
+          '<span class="r3">' + esc(c.context) + '</span></button>';
+      });
+    } else {
+      var items = sentItems();
+      h += '<div class="lhead"><span>Sent</span><button type="button" data-act="copyall">Copy all replies</button></div>';
+      if (!items.length) h += '<div class="empty">Nothing sent yet.</div>';
+      items.forEach(function (it, i) {
+        h += '<button type="button" class="row" data-act="sentsel" data-i="' + i + '" aria-selected="' + (ui.sentSel === i) + '">' +
+          '<span class="r1"><b>' + esc(it.caseTitle + (it.by ? " \u00b7 " + it.by : "")) + '</b><time>' + esc(fmt(it.sentAt)) + '</time></span>' +
+          '<span class="r2">' + esc(it.subject) + '</span>' +
+          '<span class="r3">' + esc((it.reply || it.note || "").replace(/\s+/g, " ")) + '</span></button>';
+      });
+    }
+    listEl.innerHTML = h;
+  }
+
+  function msgHtml(m, open, key, isStatic) {
+    var snippet = m.body.replace(/\s+/g, " ").slice(0, 120);
+    var head = '<span class="av' + (m.us ? " us" : "") + '">' + esc(initials(m.from)) + '</span>' +
+      '<span class="who"><span class="nm"><b>' + esc(m.from) + '</b>' + (m.addr ? '<span class="addr">&lt;' + esc(m.addr) + '&gt;</span>' : "") + '</span>' +
+      '<span class="meta" style="display:block">' + (open ? "to " + esc(m.to) : esc(snippet)) + '</span></span>' +
+      '<span class="when">' + esc(m.date || "") + '</span>';
+    var btn = isStatic
+      ? '<div class="mh">' + head + '</div>'
+      : '<button type="button" class="mh" data-act="toggle" data-i="' + key + '" aria-expanded="' + open + '">' + head + '</button>';
+    return '<div class="msg' + (open ? " open" : "") + (isStatic ? " static" : "") + '">' + btn + (open ? '<div class="mb">' + esc(m.body) + '</div>' : "") + '</div>';
+  }
+
+  function composeHtml(c) {
+    var d = S.drafts[c.id] || {};
+    var to = d.to != null ? d.to : c.replyTo;
+    var subj = d.subject != null ? d.subject : c.replySubject;
+    var tab = ui.ctab[c.id] || "reply";
+    return '<form class="compose" data-case="' + c.id + '" novalidate>' +
+      (FORM_URL ? '<div class="fld"><label for="nm-' + c.id + '">Your name</label><input id="nm-' + c.id + '" data-f="name" value="' + esc(d.name != null ? d.name : (S.name || "")) + '" autocomplete="name"></div>' : "") +
+      '<label class="nr"><input type="checkbox" id="nr-' + c.id + '" data-f="noreply"' + (d.noreply ? " checked" : "") + '> I would not reply to this retailer</label>' +
+      '<div class="ctabs"><button type="button" data-act="ctab" data-t="reply" aria-pressed="' + (tab === "reply") + '">Reply to retailer</button>' +
+      '<button type="button" data-act="ctab" data-t="note" aria-pressed="' + (tab === "note") + '">Note to Alexander</button></div>' +
+      '<div' + (tab === "reply" ? "" : " hidden") + '>' +
+        '<div class="fld"><label for="to-' + c.id + '">To</label><input id="to-' + c.id + '" data-f="to" value="' + esc(to) + '" autocomplete="off"></div>' +
+        '<div class="fld"><label for="sub-' + c.id + '">Subject</label><input id="sub-' + c.id + '" data-f="subject" value="' + esc(subj) + '" autocomplete="off"></div>' +
+        '<textarea id="reply-' + c.id + '" data-f="reply" aria-label="Reply to the retailer"' + (d.noreply ? " disabled" : "") + ' placeholder="' + (d.noreply ? "You chose not to reply. Explain why in the note." : "Write your reply to the retailer.") + '">' + esc(d.reply || "") + '</textarea>' +
+      '</div>' +
+      '<div' + (tab === "note" ? "" : " hidden") + '>' +
+        '<p class="hint">' + (d.noreply ? "You chose not to reply. Explain why, and what you would do instead (wait, try another contact or channel, close it out), plus what goes in HubSpot." : "Not sent to the retailer. What is happening commercially, what you would do next, and what goes in HubSpot.") + '</p>' +
+        '<textarea id="note-' + c.id + '" data-f="note" aria-label="Note to Alexander" placeholder="Your handover note.">' + esc(d.note || "") + '</textarea>' +
+      '</div>' +
+      '<div class="cfoot"><button type="submit" class="send">Send</button><span class="err" role="alert">' + esc(ui.err[c.id] || "") + '</span></div></form>';
+  }
+
+  function statusHtml(c) {
+    var st = ui.status[c.id];
+    var txt = st === "saving" ? "Sending…"
+      : st === "db" ? "<b>Sent.</b> Saved to Alexander's record."
+      : "<b>Sent.</b> Saved on this device. Open Sent and use Copy all replies to pass your answers to Alexander.";
+    return '<div class="banner">' + txt + '</div>';
+  }
+
+  function renderReader() {
+    var top = readerEl.scrollTop;
+    var h = "";
+    if (ui.folder === "sent") {
+      if (ui.copyText != null) {
+        h = '<div class="rhead"><button type="button" class="back" data-act="back">‹ Sent</button><h1>Copy all replies</h1></div>' +
+          '<div class="copybox"><span class="hint" style="padding:0">Your browser blocked automatic copying. Select the text below and copy it.</span><textarea id="copyarea" readonly>' + esc(ui.copyText) + '</textarea>' +
+          '<button type="button" class="linkbtn" data-act="closecopy" style="justify-self:start">Close</button></div>';
+      } else {
+        var items = sentItems(), it = ui.sentSel != null ? items[ui.sentSel] : null;
+        if (!it) {
+          h = '<div class="empty">Select a sent message to read it.</div>';
+        } else {
+          h = '<div class="rhead"><button type="button" class="back" data-act="back">‹ Sent</button><h1>' + esc(it.subject) + '</h1></div>' +
+            '<div class="sentmeta"><span>Case: ' + esc(it.caseTitle) + '</span>' + (it.by ? '<span>From: ' + esc(it.by) + '</span>' : '') + '<span>To: ' + esc(it.to) + '</span><span>Sent: ' + esc(fmt(it.sentAt)) + '</span><span>Time on case: ' + esc(mins(it.seconds)) + '</span></div>' +
+            '<div class="thread">' +
+            (it.reply ? msgHtml({ us: 1, from: "You", addr: "", to: it.to, date: "", body: it.reply }, true, 0, true) : '<div class="banner">' + (it.noReply ? "Chose not to reply to the retailer." : "No reply to the retailer.") + '</div>') +
+            (it.note ? '<div class="fwd"><span>Note to Alexander</span></div>' + msgHtml({ us: 1, from: "You", addr: "", to: "Alexander", date: "", body: it.note }, true, 0, true) : "") +
+            '</div>';
+        }
+      }
+    } else {
+      var c = byId(ui.caseId);
+      if (ui.caseId === "intro") {
+        h = '<div class="rhead"><button type="button" class="back" data-act="back">\u2039 Inbox</button><h1>' + esc(INTRO.subject) + '</h1></div><div class="thread">' +
+          msgHtml({ us: 1, from: "Alexander Neumann", addr: "hello@misfits.co", to: "me", date: INTRO.full, body: INTRO.body }, true, 0, true) + '</div>';
+      } else if (!c) {
+        h = '<div class="empty">Select a message to read it.</div>';
+      } else {
+        var allOpen = c.msgs.every(function (m, i) { return isOpen(c, i); });
+        var hand = { us: 1, from: "Alexander Neumann", addr: "hello@misfits.co", to: "me", date: c.full,
+          body: "Hi,\n\nContext: " + c.context + "\n\nYour task: " + c.task + "\n\nThanks,\nAlexander" };
+        h = '<div class="rhead"><button type="button" class="back" data-act="back">‹ Inbox</button><h1>' + esc(c.subject) + '</h1></div><div class="thread">' +
+          msgHtml(hand, true, 0, true) +
+          '<div class="fwd"><span>Forwarded thread · ' + c.msgs.length + ' messages, oldest first</span><button type="button" data-act="toggleall">' + (allOpen ? "Collapse all" : "Expand all") + '</button></div>';
+        c.msgs.forEach(function (m, i) { h += msgHtml(m, isOpen(c, i), i, false); });
+        var mine = S.sent.filter(function (x) { return x.caseId === c.id; });
+        mine.forEach(function (x) {
+          if (x.reply) h += msgHtml({ us: 1, from: "You", addr: "", to: x.to, date: fmt(x.sentAt), body: x.reply }, true, 0, true);
+        });
+        if (mine.length && !ui.reopen[c.id]) {
+          h += statusHtml(c) + '<button type="button" class="linkbtn" data-act="reopen" style="justify-self:start">Write another reply</button>';
+        } else {
+          h += composeHtml(c);
+        }
+        h += '</div>';
+      }
+    }
+    readerEl.innerHTML = h;
+    readerEl.scrollTop = top;
+    if (ui.copyText != null && ui.folder === "sent") {
+      var ta = document.getElementById("copyarea");
+      if (ta) { ta.focus(); ta.select(); }
+    }
+  }
+
+  function render() {
+    renderNav(); renderList(); renderReader();
+    var reading = ui.folder === "inbox" ? !!ui.caseId : (ui.sentSel != null || ui.copyText != null);
+    app.classList.toggle("reading", reading);
+  }
+
+  function allText() {
+    var items = sentItems().slice().reverse();
+    if (!items.length) return "No replies sent yet.";
+    return items.map(function (it) {
+      return "=== " + it.caseTitle + " ===\nSent: " + fmt(it.sentAt) + "\nTime on case: " + mins(it.seconds) + "\nTo: " + it.to + "\nSubject: " + it.subject +
+        "\n\n" + (it.reply || (it.noReply ? "(chose not to reply to the retailer)" : "(no reply to the retailer)")) + (it.note ? "\n\n--- Note to Alexander ---\n" + it.note : "");
+    }).join("\n\n\n");
+  }
+
+  async function submit(c) {
+    var d = S.drafts[c.id] || {};
+    var noReply = !!d.noreply;
+    var reply = noReply ? "" : (d.reply || "").trim(), note = (d.note || "").trim();
+    if (noReply && !note) { ui.err[c.id] = "Explain in the note why you would not reply."; ui.ctab[c.id] = "note"; renderReader(); return; }
+    if (!reply && !note) { ui.err[c.id] = "Write a reply or a note before sending."; renderReader(); return; }
+    var nameVal = ((d.name != null ? d.name : S.name) || "").trim();
+    if (FORM_URL && !ui.db && !nameVal) { ui.err[c.id] = "Add your name so Alexander knows whose answers these are."; renderReader(); return; }
+    var item = {
+      id: Date.now().toString(36), caseId: c.id, caseTitle: c.name,
+      to: d.to != null ? d.to : c.replyTo, subject: d.subject != null ? d.subject : c.replySubject,
+      by: ui.by || nameVal, reply: reply, note: note, noReply: noReply, sentAt: new Date().toISOString(),
+      seconds: S.opened[c.id] ? Math.round((Date.now() - S.opened[c.id]) / 1000) : null
+    };
+    S.sent.push(item);
+    if (nameVal) S.name = nameVal;
+    S.drafts[c.id] = { to: item.to, subject: item.subject, reply: "", note: "", noreply: false, name: nameVal };
+    save();
+    ui.reopen[c.id] = false; ui.err[c.id] = ""; ui.status[c.id] = "saving";
+    render();
+    var st = "local";
+    if (ui.db && ui.uid) {
+      try {
+        var ref = ui.db.doc("replies/" + ui.uid), patch = {};
+        patch[item.id] = item;
+        var snap = await ref.get();
+        if (snap.exists) await ref.update({ items: patch }); else await ref.set({ uid: ui.uid, items: patch });
+        st = "db";
+      } catch (e) { st = "local"; }
+    } else if (FORM_URL) {
+      try {
+        await fetch(FORM_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(item) });
+        st = "db";
+      } catch (e) { st = "local"; }
+    }
+    ui.status[c.id] = st;
+    render();
+  }
+
+  app.addEventListener("click", function (ev) {
+    var t = ev.target.closest("[data-act]");
+    if (!t) return;
+    var a = t.getAttribute("data-act");
+    if (a === "folder") {
+      ui.folder = t.getAttribute("data-f"); ui.copyText = null;
+      if (ui.folder === "inbox") ui.sentSel = null; else ui.caseId = null;
+      render();
+    } else if (a === "open") {
+      var id = t.getAttribute("data-id");
+      ui.caseId = id; S.read[id] = true;
+      if (!S.opened[id]) S.opened[id] = Date.now();
+      save(); render();
+      readerEl.scrollTop = 0;
+    } else if (a === "back") {
+      if (ui.folder === "inbox") ui.caseId = null; else { ui.sentSel = null; ui.copyText = null; }
+      render();
+    } else if (a === "toggle") {
+      var c = byId(ui.caseId), i = parseInt(t.getAttribute("data-i"), 10);
+      if (!ui.open[c.id]) ui.open[c.id] = {};
+      ui.open[c.id][i] = !isOpen(c, i); renderReader();
+    } else if (a === "toggleall") {
+      var c2 = byId(ui.caseId), all = c2.msgs.every(function (m, k) { return isOpen(c2, k); });
+      ui.open[c2.id] = {}; c2.msgs.forEach(function (m, k) { ui.open[c2.id][k] = !all; }); renderReader();
+    } else if (a === "ctab") {
+      ui.ctab[ui.caseId] = t.getAttribute("data-t"); renderReader();
+    } else if (a === "reopen") {
+      ui.reopen[ui.caseId] = true; renderReader();
+    } else if (a === "sentsel") {
+      ui.sentSel = parseInt(t.getAttribute("data-i"), 10); ui.copyText = null; render();
+    } else if (a === "closecopy") {
+      ui.copyText = null; render();
+    } else if (a === "copyall") {
+      var text = allText();
+      var fallback = function () { ui.copyText = text; ui.sentSel = null; render(); };
+      try {
+        navigator.clipboard.writeText(text).then(function () {
+          t.textContent = "Copied"; setTimeout(function () { if (t.isConnected) t.textContent = "Copy all replies"; }, 1600);
+        }, fallback);
+      } catch (e) { fallback(); }
+    }
+  });
+
+  app.addEventListener("input", function (ev) {
+    var f = ev.target.getAttribute && ev.target.getAttribute("data-f");
+    var form = ev.target.closest && ev.target.closest("form[data-case]");
+    if (!f || !form) return;
+    var id = form.getAttribute("data-case");
+    var c = byId(id);
+    if (!S.drafts[id]) S.drafts[id] = { to: c.replyTo, subject: c.replySubject, reply: "", note: "" };
+    S.drafts[id][f] = ev.target.type === "checkbox" ? ev.target.checked : ev.target.value;
+    if (f === "noreply") { ui.ctab[id] = ev.target.checked ? "note" : "reply"; save(); renderReader(); return; }
+    ui.err[id] = "";
+    var e = form.querySelector(".err"); if (e) e.textContent = "";
+    save();
+  });
+
+  app.addEventListener("submit", function (ev) {
+    var form = ev.target.closest("form[data-case]");
+    if (!form) return;
+    ev.preventDefault();
+    submit(byId(form.getAttribute("data-case")));
+  });
+
+  render();
+
+  (async function () {
+    try {
+      if (!(window.claude && window.claude.use)) return;
+      var res = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      var db = res[0], user = res[1];
+      ui.db = db || null;
+      if (db && user) {
+        try { ui.uid = await user.id(); } catch (e) { ui.uid = null; }
+        try { var me = await user.me(); ui.by = (me && me.name) || ""; } catch (e) { ui.by = ""; }
+      }
+      ui.isOwner = !!(user && user.isOwner && user.isOwner());
+      if (db && ui.isOwner) {
+        db.collection("replies").onSnapshot(function (snap) {
+          var all = [];
+          snap.docs.forEach(function (d) {
+            var its = (d.data() || {}).items || {};
+            Object.keys(its).forEach(function (k) { var o = its[k]; o.id = d.id + "/" + k; all.push(o); });
+          });
+          all.sort(function (a, b) { return a.sentAt < b.sentAt ? 1 : -1; });
+          ui.saved = all;
+          renderNav();
+          if (ui.folder === "sent") { renderList(); renderReader(); }
+        }, function () {});
+      }
+    } catch (e) {}
+  })();
+})();
+</script>
+
+</body></html>
