@@ -116,6 +116,7 @@ button { cursor: pointer; }
 .row .r2, .row .r3 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row .r3 { color: var(--muted); font-size: 13px; }
 .empty { padding: 28px 18px; color: var(--muted); }
+.fwdbtns { display: inline-flex; gap: 14px; }
 .ctx { border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); padding: 12px 16px; display: grid; gap: 4px; }
 .ctx p { margin: 0; line-height: 1.5; }
 .ctx p + p { margin-bottom: 8px; }
@@ -286,10 +287,10 @@ button { cursor: pointer; }
 
   var FORM_URL = "";
   var LS = "misfits-mail-v1";
-  var S = { read: {}, drafts: {}, sent: [], opened: {} };
+  var S = { read: {}, drafts: {}, sent: [], opened: {}, newest: false };
   try {
     var raw = localStorage.getItem(LS);
-    if (raw) { var p = JSON.parse(raw); S.read = p.read || {}; S.drafts = p.drafts || {}; S.sent = p.sent || []; S.opened = p.opened || {}; S.name = p.name || ""; }
+    if (raw) { var p = JSON.parse(raw); S.read = p.read || {}; S.drafts = p.drafts || {}; S.sent = p.sent || []; S.opened = p.opened || {}; S.name = p.name || ""; S.newest = !!p.newest; }
   } catch (e) {}
   function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
 
@@ -428,12 +429,19 @@ button { cursor: pointer; }
         var allOpen = c.msgs.every(function (m, i) { return isOpen(c, i); });
         h = '<div class="rhead"><button type="button" class="back" data-act="back">‹ Inbox</button><h1>' + esc(c.subject) + '</h1></div><div class="thread">' +
           '<div class="ctx"><p><b>Context</b></p><p>' + esc(c.context) + '</p><p><b>Your task</b></p><p>' + esc(c.task) + '</p></div>' +
-          '<div class="fwd"><span>Email thread · ' + c.msgs.length + ' messages, oldest first</span><button type="button" data-act="toggleall">' + (allOpen ? "Collapse all" : "Expand all") + '</button></div>';
-        c.msgs.forEach(function (m, i) { h += msgHtml(m, isOpen(c, i), i, false); });
+          '<div class="fwd"><span>Email thread \u00b7 ' + c.msgs.length + ' messages, ' + (S.newest ? "newest" : "oldest") + ' first</span><span class="fwdbtns">' +
+          '<button type="button" data-act="flip">' + (S.newest ? "Show oldest first" : "Show newest first") + '</button>' +
+          '<button type="button" data-act="toggleall">' + (allOpen ? "Collapse all" : "Expand all") + '</button></span></div>';
         var mine = S.sent.filter(function (x) { return x.caseId === c.id; });
+        var mineHtml = "";
         mine.forEach(function (x) {
-          if (x.reply) h += msgHtml({ us: 1, from: "You", addr: "", to: x.to, date: fmt(x.sentAt), body: x.reply }, true, 0, true);
+          if (x.reply) mineHtml += msgHtml({ us: 1, from: "You", addr: "", to: x.to, date: fmt(x.sentAt), body: x.reply }, true, 0, true);
         });
+        if (S.newest) h += mineHtml;
+        var order = c.msgs.map(function (m, i) { return i; });
+        if (S.newest) order.reverse();
+        order.forEach(function (i) { h += msgHtml(c.msgs[i], isOpen(c, i), i, false); });
+        if (!S.newest) h += mineHtml;
         if (mine.length && !ui.reopen[c.id]) {
           h += statusHtml(c) + '<button type="button" class="linkbtn" data-act="reopen" style="justify-self:start">Write another reply</button>';
         } else {
@@ -526,6 +534,8 @@ button { cursor: pointer; }
       var c = byId(ui.caseId), i = parseInt(t.getAttribute("data-i"), 10);
       if (!ui.open[c.id]) ui.open[c.id] = {};
       ui.open[c.id][i] = !isOpen(c, i); renderReader();
+    } else if (a === "flip") {
+      S.newest = !S.newest; save(); renderReader();
     } else if (a === "toggleall") {
       var c2 = byId(ui.caseId), all = c2.msgs.every(function (m, k) { return isOpen(c2, k); });
       ui.open[c2.id] = {}; c2.msgs.forEach(function (m, k) { ui.open[c2.id][k] = !all; }); renderReader();
